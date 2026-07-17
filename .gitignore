@@ -1,0 +1,46 @@
+# Unity cache
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Builds
+/[Bb]uild/
+/[Bb]uilds/
+
+# IDE
+/.vs/
+.idea/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+
+# Unity generated
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+
+# Crash reports
+crashlytics-build.properties
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
