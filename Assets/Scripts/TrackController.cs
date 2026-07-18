@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class TrackController : MonoBehaviour
 {
+    const float PwmScale = 200f;
+
     [Header("Movement")]
     [SerializeField] float moveSpeed = 0.57f;
     [SerializeField] float turnSpeed = 120f;
@@ -74,23 +76,30 @@ public class TrackController : MonoBehaviour
 
         float turn = steer * turnK * maxLinearCmd;
 
-        float targetLeft = ToPwm(v + turn);
-        float targetRight = ToPwm(v - turn);
+        float leftCommand = v + turn;
+        float rightCommand = v - turn;
 
-        leftPwm = Mathf.MoveTowards(
-            leftPwm,
-            targetLeft,
-            maxPwmStep
+        float maxMagnitude = Mathf.Max(
+            Mathf.Abs(leftCommand),
+            Mathf.Abs(rightCommand)
         );
 
-        rightPwm = Mathf.MoveTowards(
-            rightPwm,
-            targetRight,
-            maxPwmStep
-        );
+        if (maxMagnitude > maxLinearCmd)
+        {
+            // Scale both tracks together to preserve their speed ratio.
+            float scale = maxLinearCmd / maxMagnitude;
+            leftCommand *= scale;
+            rightCommand *= scale;
+        }
 
-        float leftSpeed = leftPwm / 200f;
-        float rightSpeed = rightPwm / 200f;
+        float targetLeft = ToPwm(leftCommand);
+        float targetRight = ToPwm(rightCommand);
+
+        leftPwm = StepPwm(leftPwm, targetLeft);
+        rightPwm = StepPwm(rightPwm, targetRight);
+
+        float leftSpeed = leftPwm / PwmScale;
+        float rightSpeed = rightPwm / PwmScale;
 
         float linearSpeed =
             (leftSpeed + rightSpeed) / 2f;
@@ -120,17 +129,65 @@ public class TrackController : MonoBehaviour
 
     float ToPwm(float speed)
     {
-        float pwm = Mathf.Abs(speed) * 200f;
+        float rawPwm = Mathf.Clamp(
+            speed * PwmScale,
+            -100f,
+            100f
+        );
 
-        if (pwm < motorDeadzone)
+        float magnitude = Mathf.Abs(rawPwm);
+
+        if (magnitude < motorDeadzone)
             return 0f;
 
-        pwm = Mathf.Clamp(
-            pwm,
+        magnitude = Mathf.Clamp(
+            magnitude,
             minMotorPwm,
             100f
         );
 
-        return Mathf.Sign(speed) * pwm;
+        return Mathf.Sign(rawPwm) * magnitude;
+    }
+
+    float StepPwm(float current, float target)
+    {
+        if (Mathf.Approximately(current, 0f))
+        {
+            // A stopped motor starts at its minimum working PWM.
+            return Mathf.Approximately(target, 0f)
+                ? 0f
+                : Mathf.Sign(target) * minMotorPwm;
+        }
+
+        if (Mathf.Approximately(target, 0f))
+            return StepPwmTowardZero(current);
+
+        if (Mathf.Sign(current) != Mathf.Sign(target))
+        {
+            // Brake to zero before starting in the opposite direction.
+            return StepPwmTowardZero(current);
+        }
+
+        float next = Mathf.MoveTowards(
+            current,
+            target,
+            maxPwmStep
+        );
+
+        if (Mathf.Abs(next) < minMotorPwm)
+            return Mathf.Sign(target) * minMotorPwm;
+
+        return next;
+    }
+
+    float StepPwmTowardZero(float current)
+    {
+        float nextMagnitude =
+            Mathf.Abs(current) - maxPwmStep;
+
+        if (nextMagnitude < minMotorPwm)
+            return 0f;
+
+        return Mathf.Sign(current) * nextMagnitude;
     }
 }
