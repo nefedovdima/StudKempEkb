@@ -434,7 +434,7 @@ MonoBehaviour:
   targets:
   - {fileID: 1761884489}
   - {fileID: 1308520957}
-  angle: -38
+  angle: -2
   applied: 1
 --- !u!1 &688521097
 GameObject:
@@ -685,31 +685,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.32727775
+      value: 0.32667807
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.067537926
+      value: 0.06282074
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.034524158
+      value: 0.034522645
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.6973596
+      value: 0.6992843
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.697503
+      value: 0.6994349
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.11661347
+      value: 0.104425825
       objectReference: {fileID: 0}
     - target: {fileID: -1255605710908113952, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.116535634
+      value: 0.10434406
       objectReference: {fileID: 0}
     - target: {fileID: -128737288641404483, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.x
@@ -745,31 +745,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.26283744
+      value: 0.26245728
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.07270269
+      value: 0.070231274
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.037010383
+      value: 0.037009574
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.6973596
+      value: 0.6992843
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.697503
+      value: 0.6994349
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.11661347
+      value: 0.104425825
       objectReference: {fileID: 0}
     - target: {fileID: 9078949020938347583, guid: 243b7486f11ce794c9861588998ea106, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.116535634
+      value: 0.10434406
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -942,7 +942,7 @@ MonoBehaviour:
   gripperIRPoint: {fileID: 178714798}
   ultrasonicRange: 2
   irRange: 0.15
-  gripperRange: 0.08
+  gripperHalfExtents: {x: 0.05, y: 0.025, z: 0.035}
   ultrasonicRays: 5
   coneAngle: 30
   ultrasonic: 1
@@ -1004,8 +1004,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GripperController
   sensors: {fileID: 1036100805}
   holdPoint: {fileID: 1384112956}
-  gripperIRPoint: {fileID: 178714798}
-  grabRange: 0.08
   heldBall: {fileID: 0}
 --- !u!114 &1308520961
 MonoBehaviour:

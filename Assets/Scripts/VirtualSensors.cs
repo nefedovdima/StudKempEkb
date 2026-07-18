@@ -36,6 +36,11 @@ public class VirtualSensors : MonoBehaviour
     public float RightIR => rightIR;
     public float GripperIR => gripperIR;
 
+    public bool TryGetGripperTarget(out Rigidbody target)
+    {
+        return TryFindGripperTarget(out target);
+    }
+
     void FixedUpdate()
     {
         if (centerPoint == null ||
@@ -114,6 +119,16 @@ public class VirtualSensors : MonoBehaviour
 
     float ReadGripper()
     {
+        return TryGetGripperTarget(out _) ? 1f : 0f;
+    }
+
+    bool TryFindGripperTarget(out Rigidbody target)
+    {
+        target = null;
+
+        if (gripperIRPoint == null)
+            return false;
+
         Vector3 halfExtents = GetGripperHalfExtents();
         Quaternion rotation = gripperIRPoint.rotation;
         Vector3 boxCenter = gripperIRPoint.position;
@@ -133,13 +148,14 @@ public class VirtualSensors : MonoBehaviour
         {
             Collider c = gripperOverlapBuffer[i];
 
-            if (IsTargetBallCenterInside(
+            if (TryGetTargetBallInside(
                 c,
                 boxCenter,
                 inverseRotation,
-                halfExtents))
+                halfExtents,
+                out target))
             {
-                return 1f;
+                return true;
             }
         }
 
@@ -155,41 +171,54 @@ public class VirtualSensors : MonoBehaviour
 
             foreach (Collider c in gripperChildColliderBuffer)
             {
-                if (IsTargetBallCenterInside(
+                if (TryGetTargetBallInside(
                     c,
                     boxCenter,
                     inverseRotation,
-                    halfExtents))
+                    halfExtents,
+                    out target))
                 {
-                    return 1f;
+                    return true;
                 }
             }
         }
 
-        return 0f;
+        target = null;
+        return false;
     }
 
-    bool IsTargetBallCenterInside(
+    bool TryGetTargetBallInside(
         Collider c,
         Vector3 boxCenter,
         Quaternion inverseRotation,
-        Vector3 halfExtents)
+        Vector3 halfExtents,
+        out Rigidbody target)
     {
+        target = null;
+
         if (!IsTargetBall(c))
             return false;
 
         Rigidbody attachedRigidbody = c.attachedRigidbody;
-        Vector3 ballCenter = attachedRigidbody != null
-            ? attachedRigidbody.worldCenterOfMass
-            : c.bounds.center;
+
+        if (attachedRigidbody == null)
+            return false;
+
+        Vector3 ballCenter = attachedRigidbody.worldCenterOfMass;
 
         Vector3 localCenter =
             inverseRotation * (ballCenter - boxCenter);
 
-        return
+        bool isInside =
             Mathf.Abs(localCenter.x) <= halfExtents.x &&
             Mathf.Abs(localCenter.y) <= halfExtents.y &&
             Mathf.Abs(localCenter.z) <= halfExtents.z;
+
+        if (!isInside)
+            return false;
+
+        target = attachedRigidbody;
+        return true;
     }
 
     Vector3 GetGripperHalfExtents()
