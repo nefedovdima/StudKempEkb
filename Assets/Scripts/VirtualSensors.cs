@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class VirtualSensors : MonoBehaviour
@@ -11,7 +12,14 @@ public class VirtualSensors : MonoBehaviour
     [Header("Sensor ranges")]
     [SerializeField] float ultrasonicRange = 2f;
     [SerializeField] float irRange = 0.15f;
-    [SerializeField] float gripperRange = 0.08f;
+    [SerializeField] Vector3 gripperHalfExtents =
+        new Vector3(0.05f, 0.025f, 0.035f);
+
+    const int GripperOverlapBufferSize = 64;
+    readonly Collider[] gripperOverlapBuffer =
+        new Collider[GripperOverlapBufferSize];
+    readonly List<Collider> gripperChildColliderBuffer =
+        new List<Collider>(GripperOverlapBufferSize);
 
     [Header("Ultrasonic cone")]
     [SerializeField] int ultrasonicRays = 5;
@@ -106,23 +114,91 @@ public class VirtualSensors : MonoBehaviour
 
     float ReadGripper()
     {
-        Collider[] colliders = Physics.OverlapSphere(
-            gripperIRPoint.position,
-            gripperRange,
+        Vector3 halfExtents = GetGripperHalfExtents();
+        Quaternion rotation = gripperIRPoint.rotation;
+        Vector3 boxCenter = gripperIRPoint.position;
+
+        int colliderCount = Physics.OverlapBoxNonAlloc(
+            boxCenter,
+            halfExtents,
+            gripperOverlapBuffer,
+            rotation,
             Physics.AllLayers,
             QueryTriggerInteraction.Collide
         );
 
-        foreach (Collider c in colliders)
-        {
-            if (c.transform.IsChildOf(transform))
-                continue;
+        Quaternion inverseRotation = Quaternion.Inverse(rotation);
 
-            if (IsTargetBall(c))
+        for (int i = 0; i < colliderCount; i++)
+        {
+            Collider c = gripperOverlapBuffer[i];
+
+            if (IsTargetBallCenterInside(
+                c,
+                boxCenter,
+                inverseRotation,
+                halfExtents))
+            {
                 return 1f;
+            }
+        }
+
+        Transform holdPoint = gripperIRPoint.parent;
+
+        if (holdPoint != null)
+        {
+            gripperChildColliderBuffer.Clear();
+            holdPoint.GetComponentsInChildren(
+                false,
+                gripperChildColliderBuffer
+            );
+
+            foreach (Collider c in gripperChildColliderBuffer)
+            {
+                if (IsTargetBallCenterInside(
+                    c,
+                    boxCenter,
+                    inverseRotation,
+                    halfExtents))
+                {
+                    return 1f;
+                }
+            }
         }
 
         return 0f;
+    }
+
+    bool IsTargetBallCenterInside(
+        Collider c,
+        Vector3 boxCenter,
+        Quaternion inverseRotation,
+        Vector3 halfExtents)
+    {
+        if (!IsTargetBall(c))
+            return false;
+
+        Rigidbody attachedRigidbody = c.attachedRigidbody;
+        Vector3 ballCenter = attachedRigidbody != null
+            ? attachedRigidbody.worldCenterOfMass
+            : c.bounds.center;
+
+        Vector3 localCenter =
+            inverseRotation * (ballCenter - boxCenter);
+
+        return
+            Mathf.Abs(localCenter.x) <= halfExtents.x &&
+            Mathf.Abs(localCenter.y) <= halfExtents.y &&
+            Mathf.Abs(localCenter.z) <= halfExtents.z;
+    }
+
+    Vector3 GetGripperHalfExtents()
+    {
+        return new Vector3(
+            Mathf.Abs(gripperHalfExtents.x),
+            Mathf.Abs(gripperHalfExtents.y),
+            Mathf.Abs(gripperHalfExtents.z)
+        );
     }
 
     bool TryGetDistance(
@@ -166,9 +242,17 @@ public class VirtualSensors : MonoBehaviour
 
     bool IsTargetBall(Collider c)
     {
+        if (c == null)
+            return false;
+
+        if (c.gameObject.CompareTag("TargetBall"))
+            return true;
+
+        Rigidbody attachedRigidbody = c.attachedRigidbody;
+
         return
-            c.gameObject.tag == "TargetBall" ||
-            c.transform.root.gameObject.tag == "TargetBall";
+            attachedRigidbody != null &&
+            attachedRigidbody.gameObject.CompareTag("TargetBall");
     }
 
     void OnDrawGizmosSelected()
@@ -236,9 +320,18 @@ public class VirtualSensors : MonoBehaviour
 
         Gizmos.color = Color.green;
 
-        Gizmos.DrawWireSphere(
+        Matrix4x4 previousMatrix = Gizmos.matrix;
+        Gizmos.matrix = Matrix4x4.TRS(
             gripperIRPoint.position,
-            gripperRange
+            gripperIRPoint.rotation,
+            Vector3.one
         );
+
+        Gizmos.DrawWireCube(
+            Vector3.zero,
+            GetGripperHalfExtents() * 2f
+        );
+
+        Gizmos.matrix = previousMatrix;
     }
 }
